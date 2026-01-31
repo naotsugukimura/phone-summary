@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   // 転送先の電話番号（日本の番号は+81形式で）
-  const forwardTo = "+818067815457";
+  const forwardTo = "+817074995825";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
