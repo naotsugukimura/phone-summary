@@ -20,8 +20,16 @@ export async function POST(request) {
       return NextResponse.json({ error: "No recording URL" }, { status: 400 });
     }
 
-    // 1. 録音ファイルをダウンロード（mp3形式を指定）
-    const audioResponse = await fetch(`${recordingUrl}.mp3`);
+    // 1. 録音ファイルをダウンロード（mp3形式を指定、認証付き）
+    const authHeader = Buffer.from(
+      `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
+    ).toString("base64");
+
+    const audioResponse = await fetch(`${recordingUrl}.mp3`, {
+      headers: {
+        Authorization: `Basic ${authHeader}`,
+      },
+    });
     const audioBuffer = await audioResponse.arrayBuffer();
     const base64Audio = Buffer.from(audioBuffer).toString("base64");
 
