@@ -30,6 +30,7 @@ export default function Home() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingData, setEditingData] = useState<EditingRecord | null>(null);
   const [savedId, setSavedId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchRecords();
@@ -91,6 +92,16 @@ export default function Home() {
     if (!editingData) return;
     const newActions = editingData.action_required.filter((_, i) => i !== index);
     setEditingData({ ...editingData, action_required: newActions });
+  };
+
+  const deleteRecord = async (id: number) => {
+    try {
+      await fetch(`/api/records?id=${id}`, { method: "DELETE" });
+      setRecords(records.filter(r => r.id !== id));
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error("Error deleting:", error);
+    }
   };
 
   const saveToKabenashi = async () => {
@@ -298,15 +309,44 @@ ${editingData.summary}`;
                             </button>
                           </>
                         ) : (
-                          <button
-                            onClick={() => startEditing(record)}
-                            className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 transition-all shadow-md"
-                          >
-                            編集
-                          </button>
+                          <div className="flex gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={() => startEditing(record)}
+                              className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 transition-all shadow-md"
+                            >
+                              編集
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(record.id)}
+                              className="px-3 py-2.5 text-sm font-bold rounded-xl border-2 border-red-300 text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                              🗑
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
+
+                    {/* 削除確認モーダル */}
+                    {deleteConfirmId === record.id && (
+                      <div className="bg-red-50 border-t-2 border-red-200 px-4 py-3">
+                        <p className="text-sm text-red-700 mb-2">この記録を削除しますか？</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => deleteRecord(record.id)}
+                            className="px-4 py-2 text-sm font-bold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+                          >
+                            削除する
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(null)}
+                            className="px-4 py-2 text-sm font-bold rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* 用件 */}
                     <div className="mt-4">
