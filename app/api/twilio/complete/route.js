@@ -20,17 +20,27 @@ export async function POST(request) {
       return NextResponse.json({ error: "No recording URL" }, { status: 400 });
     }
 
-    // 1. 録音ファイルをダウンロード（mp3形式を指定、認証付き）
+    // 1. 録音ファイルをダウンロード（wav形式を指定、認証付き）
     const authHeader = Buffer.from(
       `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
     ).toString("base64");
 
-    const audioResponse = await fetch(`${recordingUrl}.mp3`, {
+    const audioResponse = await fetch(`${recordingUrl}.wav`, {
       headers: {
         Authorization: `Basic ${authHeader}`,
       },
     });
+
+    console.log("Audio response status:", audioResponse.status);
+    console.log("Audio response content-type:", audioResponse.headers.get("content-type"));
+
+    if (!audioResponse.ok) {
+      throw new Error(`Failed to download recording: ${audioResponse.status}`);
+    }
+
     const audioBuffer = await audioResponse.arrayBuffer();
+    console.log("Audio buffer size:", audioBuffer.byteLength);
+
     const base64Audio = Buffer.from(audioBuffer).toString("base64");
 
     // 2. Geminiで要約
@@ -40,7 +50,7 @@ export async function POST(request) {
     const result = await model.generateContent([
       {
         inlineData: {
-          mimeType: "audio/mpeg",
+          mimeType: "audio/wav",
           data: base64Audio,
         },
       },
